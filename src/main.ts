@@ -8,7 +8,8 @@ import {
     Plugin,
 } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
+// TODO: style the help modal
+
 interface KeyMap {
     [key: string]: string;
 }
