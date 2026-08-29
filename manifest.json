@@ -1,0 +1,10 @@
+{
+        "id": "keybind-group",
+        "name": "Keybind Group",
+        "version": "1.0.0",
+        "minAppVersion": "1.0.0",
+        "description": "Multi-chord keybind with which key modal",
+        "author": "Sev Andry",
+        "authorUrl": "https://sevaaadev.github.io",
+        "isDesktopOnly": false
+}
