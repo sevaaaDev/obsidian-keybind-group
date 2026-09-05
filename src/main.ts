@@ -8,8 +8,41 @@ import {
     Plugin,
 } from 'obsidian';
 
-// TODO: style the help modal
-// TODO: handle modifier
+// TODO: make setting page to configure keybind
+// TODO: use suggestmodal to pick command to bind
+
+// to record new keybind
+class RecordingModal {}
+
+// to pick command to bind
+class CommandPickerModal {}
+
+class KeyData {
+    keyChar: string;
+    shift: boolean;
+    ctrl: boolean;
+    alt: boolean;
+    constructor(keyChar: string, shift: boolean, ctrl: boolean, alt: boolean) {
+	this.keyChar = keyChar;
+	this.shift = shift;
+	this.ctrl = ctrl;
+	this.alt = alt;
+    }
+
+    toString(): string {
+	let repr = this.keyChar.toLowerCase();
+	if (this.shift) {
+	    repr = "S-" + repr;
+	}
+	if (this.alt) {
+	    repr = "M-" + repr;
+	}
+	if (this.ctrl) {
+	    repr = "C-" + repr;
+	}
+	return repr;
+    }
+}
 
 interface KeyMap {
     [key: string]: string;
@@ -17,19 +50,23 @@ interface KeyMap {
 
 export default class KeybindGroup extends Plugin {
     mainKeymap: KeyMap = {
-        "f": "switcher:open",
+        "C-f": "switcher:open",
         "3": "workspace:split-vertical",
         "2": "workspace:split-horizontal",
-        "1": "workspace:close-others",        
+        "1": "workspace:close-others",
+	"o": "editor:focus",
+	"b": "app:toggle-left-sidebar",
+	"l": "editor:insert-tag",	
     };
     public invokeCommandId(id: string) {
         this.app.commands.executeCommandById(id);
     }
     async onload() {
         // === this gives all commands id ===
-        // console.log(Object.values(this.app.commands.commands).map((e) => e.id));
-        
-        // This adds a simple command that can be triggered anywhere
+        console.log(Object.values(this.app.commands.commands).map((e) => e.id));
+
+	// WARN: command meant for editing should only be available in certain condition
+	// TODO: figure out how to determine which command available
         this.addCommand({
             id: 'open-which-key',
             name: 'Open Which Key (main)',
@@ -43,7 +80,6 @@ export default class KeybindGroup extends Plugin {
 }
 
 
-
 class WhichKey extends Modal {
     keymap: KeyMap;
     plugin: KeybindGroup;
@@ -55,19 +91,23 @@ class WhichKey extends Modal {
         this.keymap = keymap;
     }
 
+    convertEvtToKey(evt: KeyboardEvent) {
+	let {key, shiftKey, ctrlKey, altKey} = evt;
+	return new KeyData(key, shiftKey, ctrlKey, altKey);
+    }
+
     render() {
 	this.setTitle('Which Key');
 	
 	const container = this.contentEl;
 	container.addClasses(['container']);
 
-	// Create grid container
 	const group = container.createDiv('group');
 
 	const header = group.createEl('h1');
 	header.setText("Editing")
+	
 	const list = group.createEl('ul');
-	// Data rows
 	Object.entries(this.keymap).forEach(([k, c], index) => {
 	    const li = list.createEl('li');
 	    const key = li.createEl('code');	    
@@ -81,9 +121,10 @@ class WhichKey extends Modal {
         const { contentEl } = this;
         
         this.handleKey = (evt: KeyboardEvent) => {
+	    let key = this.convertEvtToKey(evt);
             evt.preventDefault();
             evt.stopPropagation();
-            let cmd = this.keymap[evt.key];
+            let cmd = this.keymap[key.toString()];
             if (cmd !== undefined) {
                 this.plugin.invokeCommandId(cmd);
                 this.close();
