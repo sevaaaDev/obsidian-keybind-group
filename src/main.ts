@@ -54,7 +54,7 @@ export default class KeybindGroup extends Plugin {
         "3": "workspace:split-vertical",
         "2": "workspace:split-horizontal",
         "1": "workspace:close-others",
-	"o": "editor:focus",
+	"o": "editor:focus-bottom",
 	"b": "app:toggle-left-sidebar",
 	"l": "editor:insert-tag",	
     };
@@ -63,7 +63,7 @@ export default class KeybindGroup extends Plugin {
     }
     async onload() {
         // === this gives all commands id ===
-        console.log(Object.values(this.app.commands.commands).map((e) => e.id));
+        // console.log(Object.values(this.app.commands.commands).map((e) => e.id));
 
 	// WARN: command meant for editing should only be available in certain condition
 	// TODO: figure out how to determine which command available
@@ -126,7 +126,9 @@ class WhichKey extends Modal {
             evt.stopPropagation();
             let cmd = this.keymap[key.toString()];
             if (cmd !== undefined) {
-                this.plugin.invokeCommandId(cmd);
+                /* this will close the modal and refocus to editor
+                   before executing the command */
+                window.setTimeout((() => this.plugin.invokeCommandId(cmd)).bind(this));
                 this.close();
             }                
         }
