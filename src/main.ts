@@ -1,5 +1,4 @@
 import {
-    Setting,
     Editor,
     MarkdownView,
     MarkdownFileInfo,
@@ -8,7 +7,14 @@ import {
     Plugin,
 } from 'obsidian';
 
+import {
+    DEFAULT_SETTINGS,
+    MyPluginSettings,
+    SampleSettingTab,
+} from './settings'; 
+
 // TODO: make setting page to configure keybind
+// TODO: we can store a list of keybind group in setting, to then created a command for each.
 // TODO: use suggestmodal to pick command to bind
 
 // to record new keybind
@@ -49,6 +55,7 @@ interface KeyMap {
 }
 
 export default class KeybindGroup extends Plugin {
+    settings!: MyPluginSettings; 
     mainKeymap: KeyMap = {
         "C-f": "switcher:open",
         "3": "workspace:split-vertical",
@@ -62,6 +69,15 @@ export default class KeybindGroup extends Plugin {
         this.app.commands.executeCommandById(id);
     }
     async onload() {
+        await this.loadSettings();
+
+        for (let cmd of this.settings.cmd) {
+            this.addCommand({
+                id: cmd,
+                name: cmd,
+                callback: () => {},
+            });
+        }
         // === this gives all commands id ===
         // console.log(Object.values(this.app.commands.commands).map((e) => e.id));
 
@@ -77,6 +93,14 @@ export default class KeybindGroup extends Plugin {
     }
 
     onunload() {}
+
+    async loadSettings() {
+        this.settings = Object.assign(
+            {},
+            DEFAULT_SETTINGS,
+            (await this.loadData()) as Partial<MyPluginSettings>,
+        );
+    }
 }
 
 
