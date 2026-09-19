@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, PluginSettingTab, Setting, Modal } from 'obsidian';
 import MyPlugin from './main';
 
 export interface KeybindGroupSettings {
@@ -31,9 +31,9 @@ export class KeybindGroupSettingTab extends PluginSettingTab {
             .addButton((button) => {
                 button
                     .setButtonText('Add new group')
-                    /*.onClick(() => {
+                    .onClick(() => {
                         new AddGroupModal(this.plugin).open();
-                    })*/
+                    });
             });
         this.displayListCmd(containerEl);
 
@@ -56,5 +56,35 @@ export class KeybindGroupSettingTab extends PluginSettingTab {
                     })*/
             });
         }
+    }
+}
+
+class AddGroupModal extends Modal {
+    plugin: KeybindGroup;
+
+    constructor(plugin: KeybindGroup) {
+        super(plugin.app);        
+        this.plugin = plugin;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        new Setting(contentEl)
+            .setName("Group Name")
+            .setHeading()
+            .addText((input) => {
+                input.setPlaceholder('"Editor Keybind Group"');
+            });
+        new Setting(contentEl)
+            .setName("Keybindings")
+            .setHeading()
+            .addButton((b) => {
+                b.setButtonText("Add new keybind")
+            })
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
     }
 }
