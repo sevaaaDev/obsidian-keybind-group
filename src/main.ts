@@ -9,8 +9,8 @@ import {
 
 import {
     DEFAULT_SETTINGS,
-    MyPluginSettings,
-    SampleSettingTab,
+    KeybindGroupSettings,
+    KeybindGroupSettingTab,
 } from './settings'; 
 
 // TODO: make setting page to configure keybind
@@ -55,7 +55,7 @@ interface KeyMap {
 }
 
 export default class KeybindGroup extends Plugin {
-    settings!: MyPluginSettings; 
+    settings!: KeybindGroupSettings; 
     mainKeymap: KeyMap = {
         "C-f": "switcher:open",
         "3": "workspace:split-vertical",
@@ -70,6 +70,8 @@ export default class KeybindGroup extends Plugin {
     }
     async onload() {
         await this.loadSettings();
+
+        this.addSettingTab(new KeybindGroupSettingTab(this.app, this));
 
         for (let cmd of this.settings.cmd) {
             this.addCommand({
