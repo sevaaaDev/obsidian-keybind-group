@@ -1,20 +1,31 @@
 import { App, PluginSettingTab, Setting, Modal } from 'obsidian';
-import MyPlugin from './main';
+import KeybindGroup, { KeyMap } from './main';
 
 export interface KeybindGroupSettings {
-    mySetting: string;
-    cmd: string[];
+    groups: {[key: string]: {desc: string; keymap: KeyMap;}};
 }
 
 export const DEFAULT_SETTINGS: KeybindGroupSettings = {
-    mySetting: 'default',
-    cmd: ['System keybind', 'Editor keybind'],
+    groups: { 
+        "Main": {
+        desc: "Main keymap",
+        keymap: {
+                "C-f": {id: "switcher:open", name: "Open Switcher"},
+                "3": {id: "workspace:split-vertical", name: "Split Workspace Vertically"},
+                "2": {id: "workspace:split-horizontal", name: "Split Workspace Horizontally"},
+                "1": {id: "workspace:close-others", name: "Close Other Workspaces"},
+                "o": {id: "editor:focus-bottom", name: "Focus Bottom Editor"},
+                "b": {id: "app:toggle-left-sidebar", name: "Toggle Left Sidebar"},
+                "l": {id: "editor:insert-tag", name: "Insert Tag"}
+            }
+        },
+    },
 };
 
 export class KeybindGroupSettingTab extends PluginSettingTab {
-    plugin: MyPlugin;
+    plugin: KeybindGroup;
 
-    constructor(app: App, plugin: MyPlugin) {
+    constructor(app: App, plugin: KeybindGroup) {
         super(app, plugin);
         this.plugin = plugin;
     }
@@ -40,12 +51,15 @@ export class KeybindGroupSettingTab extends PluginSettingTab {
     }
 
     displayListCmd(containerEl: HTMLElement): void {
-        for (let cmd of this.plugin.settings.cmd) {
+        for (let [name, detail] of Object.entries(this.plugin.settings.groups)) {
+            let {desc, keymap} = detail;
             new Setting(containerEl)
-            .setName(cmd)
-            .setDesc(cmd)
+            .setName(name)
+            .setDesc(desc)
             .addButton((button) => {
-                button.setButtonText('Modify')
+                button
+                    .setButtonText('Modify')
+                    .onClick(() => {})
             })
             .addExtraButton((button) => {
                 button
@@ -69,18 +83,37 @@ class AddGroupModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        new Setting(contentEl)
+        this.setTitle('Modify Group');
+        let groupDetail = contentEl.createDiv('modify-group-modal');
+        new Setting(groupDetail)
             .setName("Group Name")
-            .setHeading()
             .addText((input) => {
-                input.setPlaceholder('"Editor Keybind Group"');
-            });
+                input.setPlaceholder('Editor Keybind Group');
+            })
+        new Setting(groupDetail)
+            .setName("Description")
+            .addText((input) => {
+                input.setPlaceholder('Keybind for editing markdown');
+            })
         new Setting(contentEl)
             .setName("Keybindings")
+            .setDesc("Keybind that active on command")
             .setHeading()
             .addButton((b) => {
                 b.setButtonText("Add new keybind")
-            })
+            });
+        let listKeybindDiv = contentEl.createDiv('list-keybind');
+        new Setting(listKeybindDiv)
+            .setName("C-b")
+            .setDesc("Quick Buffer")
+            .addExtraButton((button) => {
+                button
+                    .setIcon('trash')
+                    .setTooltip('Delete keybind')
+                    /*.onClick(() => {
+                        new DeleteGroupModal(this.plugin).open();
+                    })*/
+            });
     }
 
     onClose() {

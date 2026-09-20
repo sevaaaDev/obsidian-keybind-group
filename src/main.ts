@@ -50,48 +50,44 @@ class KeyData {
     }
 }
 
-interface KeyMap {
-    [key: string]: string;
+export interface KeyMap {
+    [key: string]: {
+        id: string;
+        name: string;
+    };
 }
 
 export default class KeybindGroup extends Plugin {
     settings!: KeybindGroupSettings; 
-    mainKeymap: KeyMap = {
-        "C-f": "switcher:open",
-        "3": "workspace:split-vertical",
-        "2": "workspace:split-horizontal",
-        "1": "workspace:close-others",
-	"o": "editor:focus-bottom",
-	"b": "app:toggle-left-sidebar",
-	"l": "editor:insert-tag",	
-    };
+
     public invokeCommandId(id: string) {
         this.app.commands.executeCommandById(id);
     }
     async onload() {
+        
         await this.loadSettings();
 
         this.addSettingTab(new KeybindGroupSettingTab(this.app, this));
 
-        for (let cmd of this.settings.cmd) {
-            this.addCommand({
-                id: cmd,
-                name: cmd,
-                callback: () => {},
-            });
-        }
+        // for (let cmd of this.settings.cmd) {
+        //     this.addCommand({
+        //         id: cmd,
+        //         name: cmd,
+        //         callback: () => {},
+        //     });
+        // }
         // === this gives all commands id ===
-        // console.log(Object.values(this.app.commands.commands).map((e) => e.id));
+        console.log(Object.values(this.app.commands.commands).map((e) => e.id));
 
 	// WARN: command meant for editing should only be available in certain condition
 	// TODO: figure out how to determine which command available
-        this.addCommand({
-            id: 'open-which-key',
-            name: 'Open Which Key (main)',
-            callback: () => {
-                new WhichKey(this, this.mainKeymap).open();
-            },
-        });
+        // this.addCommand({
+        //     id: 'open-which-key',
+        //     name: 'Open Which Key (main)',
+        //     callback: () => {
+        //         new WhichKey(this, this.mainKeymap).open();
+        //     },
+        // });
     }
 
     onunload() {}
@@ -100,8 +96,11 @@ export default class KeybindGroup extends Plugin {
         this.settings = Object.assign(
             {},
             DEFAULT_SETTINGS,
-            (await this.loadData()) as Partial<MyPluginSettings>,
+            (await this.loadData()) as Partial<KeybindGroupSettings>,
         );
+    }
+    async saveSettings() {
+        await this.saveData(this.settings);
     }
 }
 
@@ -109,7 +108,7 @@ export default class KeybindGroup extends Plugin {
 class WhichKey extends Modal {
     keymap: KeyMap;
     plugin: KeybindGroup;
-    handleKey;
+    handleKey: (evt: KeyboardEvent) => void;
 
     constructor(plugin: KeybindGroup, keymap: KeyMap) {
         super(plugin.app);        
@@ -139,7 +138,7 @@ class WhichKey extends Modal {
 	    const key = li.createEl('code');	    
 	    const text = li.createEl('span');
 	    key.setText(k);
-	    text.setText(c);
+	    text.setText(c.name);
 	});    	
     }
     onOpen() {
@@ -154,7 +153,7 @@ class WhichKey extends Modal {
             if (cmd !== undefined) {
                 /* this will close the modal and refocus to editor
                    before executing the command */
-                window.setTimeout((() => this.plugin.invokeCommandId(cmd)).bind(this));
+                window.setTimeout((() => this.plugin.invokeCommandId(cmd.id)).bind(this));
                 this.close();
             }                
         }
